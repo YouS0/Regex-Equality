@@ -287,3 +287,74 @@ class Dfa:
         for i in range(len(self.Q)):
             #Printing index, the delta fuunction for that transition and if it's final state
             print(i,self.d[i],'F' if i in self.F else '')
+
+#Preprocessing Functions
+def preprocess(regex):
+    regex = clean_kleene(regex)
+    regex = regex.replace(' ','')
+    regex = '(' + regex + ')' + '#'
+    while '()' in regex:
+        regex = regex.replace('()','')
+    return regex
+
+def clean_kleene(regex):
+    for i in range(0, len(regex) - 1):
+        while i < len(regex) - 1 and regex[i + 1] == regex[i] and regex[i] == '*':
+            regex = regex[:i] + regex[i + 1:]
+    return regex
+
+def gen_alphabet(regex):
+    return set(regex) - set('()|*')
+
+#Settings
+DEBUG = False
+use_lambda = True
+lambda_symbol = '$'
+alphabet = None
+
+#Main
+regex = 'b*(abb*)*(a|$)'
+
+#Check
+if not is_valid_regex(regex , True):
+    exit(0)
+
+#Preprocess regex and generate the alphabet    
+p_regex = preprocess(regex)
+alphabet = gen_alphabet(p_regex)
+#add optional letters that don't appear in the expression
+extra = ''
+alphabet = alphabet.union(set(extra))
+
+#Construct
+tree = RegexTree(p_regex)
+if DEBUG:
+    tree.write()
+dfa = tree.toDfa()
+
+
+regex2 = 'b*|(b|ab)*ab*'
+if not is_valid_regex(regex2 , True):
+    exit(0)
+p_regex2 = preprocess(regex2)
+alphabet2 = gen_alphabet(p_regex2)
+#add optional letters that don't appear in the expression
+extra2 = ''
+alphabet2 = alphabet2.union(set(extra2))
+
+#Construct
+tree2 = RegexTree(p_regex2)
+if DEBUG:
+    tree2.write()
+dfa2 = tree2.toDfa()
+
+
+print("===================")
+dfa.write()
+print("===================")
+dfa2.write()
+print("===================")
+if(dfa.d == dfa2.d and dfa.F == dfa2.F):
+    print("Two REs Are Equal! ")
+else:
+    print("Two REs Are Not Equal! ")
