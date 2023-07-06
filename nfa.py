@@ -6,10 +6,10 @@ from asttree import (
     OrAstNode,
     SeqAstNode,
     StarAstNode,
-    #PlusAstNode,
-    #QuestionMarkAstNode,
+    PlusAstNode,
+    QuestionMarkAstNode,
     LiteralCharacterAstNode,
-    #CharacterClassAstNode,
+    CharacterClassAstNode,
 )
 from enum import Enum
 from typing import Dict, List, Set, Tuple
@@ -173,127 +173,100 @@ def __star_ast_to_nfa(root: StarAstNode, index: int) -> Tuple[ThompsonNFA, int]:
     return ThompsonNFA(start, end), index + 1
 
 
-# def __plus_ast_to_nfa(root: PlusAstNode, index: int) -> Tuple[ThompsonNFA, int]:
-#     """
-#         v------e-------|
-#     -> S0 -e-> S1 -a-> S2 -e-> S3
-#     """
-#     start = State(f"S{index}")  # S0
-#     nfa, index = __ast_to_nfa(root.left, index + 1)
-#     end = State(f"S{index}")  # S3
-#     __add_transition(start, nfa.start, EPSILON)  # S0 -e-> S1
-#     __add_transition(nfa.end, end, EPSILON)  # S2 -e-> S3
-#     __add_transition(nfa.end, nfa.start, EPSILON)  # S2 -e-> S1
-#     __update_start_finish(start, end)
-#     return ThompsonNFA(start, end), index + 1
+def __plus_ast_to_nfa(root: PlusAstNode, index: int) -> Tuple[ThompsonNFA, int]:
+    """
+        v------e-------|
+    -> S0 -e-> S1 -a-> S2 -e-> S3
+    """
+    start = State(f"S{index}")  # S0
+    nfa, index = __ast_to_nfa(root.left, index + 1)
+    end = State(f"S{index}")  # S3
+    __add_transition(start, nfa.start, EPSILON)  # S0 -e-> S1
+    __add_transition(nfa.end, end, EPSILON)  # S2 -e-> S3
+    __add_transition(nfa.end, nfa.start, EPSILON)  # S2 -e-> S1
+    __update_start_finish(start, end)
+    return ThompsonNFA(start, end), index + 1
 
 
-# def __question_mark_ast_to_nfa(root: QuestionMarkAstNode, index: int) -> Tuple[ThompsonNFA, int]:
-#     """
-#         |------e-------v
-#     -> S0 -e-> S1 -a-> S2
-#                 |--e---^
-#     """
-#     start = State(f"S{index}")  # S0
-#     nfa, index = __ast_to_nfa(root.left, index + 1)
-#     end = State(f"S{index}")  # S2
-#     __add_transition(start, end, EPSILON)  # S0 -e-> S2
-#     __add_transition(start, nfa.start, EPSILON)  # S0 -e-> S1
-#     __add_transition(nfa.end, end, EPSILON)  # S2 -e-> S2
-#     __update_start_finish(start, end)
-#     return ThompsonNFA(start, end), index + 1
+def __question_mark_ast_to_nfa(root: QuestionMarkAstNode, index: int) -> Tuple[ThompsonNFA, int]:
+    """
+        |------e-------v
+    -> S0 -e-> S1 -a-> S2
+                |--e---^
+    """
+    start = State(f"S{index}")  # S0
+    nfa, index = __ast_to_nfa(root.left, index + 1)
+    end = State(f"S{index}")  # S2
+    __add_transition(start, end, EPSILON)  # S0 -e-> S2
+    __add_transition(start, nfa.start, EPSILON)  # S0 -e-> S1
+    __add_transition(nfa.end, end, EPSILON)  # S2 -e-> S2
+    __update_start_finish(start, end)
+    return ThompsonNFA(start, end), index + 1
 
 
-# def __character_class_ast_to_nfa(root: CharacterClassAstNode, index: int) -> Tuple[ThompsonNFA, int]:
-#     """
-#     this time root it has a set[str | Tuple[str, str]] so in
-#     1. just a char: it's just a literal char
-#     2. a range: it's a range of chars like [a-z] => "a-z" for simplicity
-#         2.a it could be written as [abc...z], later maybe !
-#         2.b in case of reversed range => the parser will throw an error
-#     then consider all of the result as ored literals
-#     """
-#     start = State(f"S{index}")  # S0
-#     nfas = []
-#     for char in root.char_class:
-#         if isinstance(char, str):
-#             value = char
-#         else:
-#             value = f"{char[0]}-{char[1]}"
-#         nfa, index = __literal_character_ast_to_nfa(value, index + 1)
-#         nfas.append(nfa)
+def __character_class_ast_to_nfa(root: CharacterClassAstNode, index: int) -> Tuple[ThompsonNFA, int]:
+    """
+    this time root it has a set[str | Tuple[str, str]] so in
+    1. just a char: it's just a literal char
+    2. a range: it's a range of chars like [a-z] => "a-z" for simplicity
+        2.a it could be written as [abc...z], later maybe !
+        2.b in case of reversed range => the parser will throw an error
+    then consider all of the result as ored literals
+    """
+    start = State(f"S{index}")  # S0
+    nfas = []
+    for char in root.char_class:
+        if isinstance(char, str):
+            value = char
+        else:
+            value = f"{char[0]}-{char[1]}"
+        nfa, index = __literal_character_ast_to_nfa(value, index + 1)
+        nfas.append(nfa)
 
-#     # or each 2 nfas together
-#     while len(nfas) > 1:
-#         nfa1 = nfas.pop()
-#         nfa2 = nfas.pop()
-#         semi_start = State(f"S{index + 1}")  # S0
-#         semi_end = State(f"S{index + 2}")  # S1
-#         __add_transition(semi_start, nfa1.start, EPSILON)  # S0 -e-> S1
-#         __add_transition(semi_start, nfa2.start, EPSILON)  # S0 -e-> S2
-#         __add_transition(nfa1.end, semi_end, EPSILON)  # S3 -e-> S4
-#         __add_transition(nfa2.end, semi_end, EPSILON)  # S5 -e-> S4
-#         nfas.append(ThompsonNFA(semi_start, semi_end))
-#         index += 2
+    # or each 2 nfas together
+    while len(nfas) > 1:
+        nfa1 = nfas.pop()
+        nfa2 = nfas.pop()
+        semi_start = State(f"S{index + 1}")  # S0
+        semi_end = State(f"S{index + 2}")  # S1
+        __add_transition(semi_start, nfa1.start, EPSILON)  # S0 -e-> S1
+        __add_transition(semi_start, nfa2.start, EPSILON)  # S0 -e-> S2
+        __add_transition(nfa1.end, semi_end, EPSILON)  # S3 -e-> S4
+        __add_transition(nfa2.end, semi_end, EPSILON)  # S5 -e-> S4
+        nfas.append(ThompsonNFA(semi_start, semi_end))
+        index += 2
 
-#     end = State(f"S{index + 1}")  # S1
-#     __add_transition(nfas[0].end, end, EPSILON)  # S3 -e-> S4
-#     __add_transition(start, nfas[0].start, EPSILON)  # S0 -e-> S1
-#     __update_start_finish(start, end)
-#     return ThompsonNFA(start, end), index + 2
-
-
-# # def __character_class_ast_to_nfa_verbose(root: CharacterClassAstNode, index: int) -> Tuple[ThompsonNFA, int]:
-# # """
-# #                     -e-> S2 -a-> S3 -e->
-# #                   //                    \\
-# #               -> S0                     S6 ->
-# #             //    \\                    //   \\
-# #            //      -e-> S4 -b-> S5 -e-->      \\
-# #        -> S0                                   S7 ->
-# #            \\                                 //
-# #             \\                               //
-# #              ---e----> S4 -b-> S5 -----e----->
-# # """
-# #     def build_or_ast_from_set(chars: Set[str]) -> AstNode:
-# #         if len(chars) == 1:
-# #             return LiteralCharacterAstNode(chars.pop())
-# #         else:
-# #             char = chars.pop()
-# #             return OrAstNode(LiteralCharacterAstNode(char), build_or_ast_from_set(chars))
-# #     all_chars = set()
-# #     for char in root.char_class:
-# #         if isinstance(char, str):
-# #             all_chars.add(char)
-# #         else:
-# #             for c in range(ord(char[0]), ord(char[1]) + 1):
-# #                 all_chars.add(chr(c))
-# #     return __ast_to_nfa(build_or_ast_from_set(all_chars), index)
+    end = State(f"S{index + 1}")  # S1
+    __add_transition(nfas[0].end, end, EPSILON)  # S3 -e-> S4
+    __add_transition(start, nfas[0].start, EPSILON)  # S0 -e-> S1
+    __update_start_finish(start, end)
+    return ThompsonNFA(start, end), index + 2
 
 
-# def __character_class_ast_to_nfa_verbose(root: CharacterClassAstNode, index: int) -> Tuple[ThompsonNFA, int]:
-#     """
-#           ---------a-------->
-#          //                 \\
-#      -> S0 ---------b-------> S1
-#          \\                 //
-#           ---------c-------->
-#     """
-#     start = State(f"S{index}")  # S0
-#     index += 1
-#     end = State(f"S{index}")
 
-#     all_chars = set()
-#     for char in root.char_class:
-#         if isinstance(char, str):
-#             all_chars.add(char)
-#         else:
-#             for c in range(ord(char[0]), ord(char[1]) + 1):
-#                 all_chars.add(chr(c))
+def __character_class_ast_to_nfa_verbose(root: CharacterClassAstNode, index: int) -> Tuple[ThompsonNFA, int]:
+    """
+          ---------a-------->
+         //                 \\
+     -> S0 ---------b-------> S1
+         \\                 //
+          ---------c-------->
+    """
+    start = State(f"S{index}")  # S0
+    index += 1
+    end = State(f"S{index}")
 
-#     for char in all_chars:
-#         __add_transition(start, end, char)
+    all_chars = set()
+    for char in root.char_class:
+        if isinstance(char, str):
+            all_chars.add(char)
+        else:
+            for c in range(ord(char[0]), ord(char[1]) + 1):
+                all_chars.add(chr(c))
 
-#     __update_start_finish(start, end)
+    for char in all_chars:
+        __add_transition(start, end, char)
 
-#     return ThompsonNFA(start, end), index + 1
+    __update_start_finish(start, end)
+
+    return ThompsonNFA(start, end), index + 1
