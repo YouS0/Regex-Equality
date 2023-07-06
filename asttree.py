@@ -46,45 +46,45 @@ class StarAstNode(AstNode):
 
 #========================================================
 
-# class PlusAstNode(AstNode):
-#     def __init__(self, left: AstNode):
-#         self.left = left
+class PlusAstNode(AstNode):
+    def __init__(self, left: AstNode):
+        self.left = left
 
-#     def __str__(self):
-#         return f"({self.left}+)"
+    def __str__(self):
+        return f"({self.left}+)"
 
-#     def __repr__(self):
-#         return f"({self.left}+)"
-
-
-# class QuestionMarkAstNode(AstNode):
-#     def __init__(self, left: AstNode):
-#         self.left = left
-
-#     def __str__(self):
-#         return f"({self.left}?)"
-
-#     def __repr__(self):
-#         return f"({self.left}?)"
+    def __repr__(self):
+        return f"({self.left}+)"
 
 
-# class LiteralCharacterAstNode(AstNode):
-#     def __init__(self, char: str):
-#         self.char = char
+class QuestionMarkAstNode(AstNode):
+    def __init__(self, left: AstNode):
+        self.left = left
 
-#     def __str__(self):
-#         return self.char
+    def __str__(self):
+        return f"({self.left}?)"
 
-#     def __repr__(self):
-#         return self.char
+    def __repr__(self):
+        return f"({self.left}?)"
 
 
-# class CharacterClassAstNode(AstNode):
-#     def __init__(self, char_class: set[str | tuple[str, str]]):
-#         self.char_class = char_class
+class LiteralCharacterAstNode(AstNode):
+    def __init__(self, char: str):
+        self.char = char
 
-#     def __str__(self):
-#         return f"[{self.char_class}]"
+    def __str__(self):
+        return self.char
 
-#     def __repr__(self):
-#         return f"[{self.char_class}]"
+    def __repr__(self):
+        return self.char
+
+
+class CharacterClassAstNode(AstNode):
+    def __init__(self, char_class: set[str | tuple[str, str]]):
+        self.char_class = char_class
+
+    def __str__(self):
+        return f"[{self.char_class}]"
+
+    def __repr__(self):
+        return f"[{self.char_class}]"
