@@ -1,19 +1,20 @@
 from copy import deepcopy
 
 #Regex validation
-def is_valid_regex(regex):
-    return valid_brackets(regex) and valid_operations(regex)
+def is_valid_regex(regex , printtri):
+    return valid_brackets(regex,printtri) and valid_operations(regex)
 
 
-def valid_brackets(regex):
+def valid_brackets(regex,printtri):
     opened_brackets = 0
     for c in regex:
         if c == '(':
             opened_brackets += 1
         if c == ')':
             opened_brackets -= 1
-        if opened_brackets < 0:
-            print('ERROR missing bracket')
+        if (opened_brackets < 0):
+            if(printtri):
+                print('ERROR missing bracket')
             return False
     if opened_brackets == 0:
         return True
@@ -46,7 +47,7 @@ class RegexNode:
 
     @staticmethod
     def trim_brackets(regex):
-        while regex[0] == '(' and regex[-1] == ')' and is_valid_regex(regex[1:-1]):
+        while regex[0] == '(' and regex[-1] == ')' and is_valid_regex(regex[1:-1] , False):
             regex = regex[1:-1]
         return regex
     
